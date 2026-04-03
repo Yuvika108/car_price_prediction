@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Price Predictor</title>
+    <meta name="description" content="Predict your used car price using AI and advanced linear regression. Get accurate estimations now.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb; /* Corporate Blue */
+            --primary-hover: #1d4ed8;
+            --bg: #f8fafc;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --card-bg: #ffffff;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .header {
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 32px;
+            text-align: left;
+        }
+
+        h1 {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.9375rem;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 800px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: var(--shadow);
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+
+        @media (max-width: 640px) {
+            .grid-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        @media (max-width: 640px) {
+            .form-group.full-width {
+                grid-column: span 1;
+            }
+        }
+
+        label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        select, input {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background-color: #fff;
+            color: var(--text-main);
+            font-size: 0.9375rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+        }
+
+        select:focus, input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .btn-predict {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 8px;
+        }
+
+        .btn-predict:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-predict:disabled {
+            background-color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .result-section {
+            margin-top: 32px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border);
+            display: none;
+            text-align: center;
+        }
+
+        .result-section.active {
+            display: block;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .result-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .result-value {
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        footer {
+            margin-top: 40px;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Vehicle Valuation Portal</h1>
+        <p class="subtitle">Enter the vehicle details to get an instant market price estimate.</p>
+    </div>
+
+    <div class="card">
+        <form id="prediction-form">
+            <div class="grid-layout">
+                <div class="form-group">
+                    <label for="company">Company Name</label>
+                    <select name="company" id="company" onchange="load_car_models(this.id, 'car_model')">
+                        {% for company in companies %}
+                            <option value="{{ company }}">{{ company }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="car_model">Model Selection</label>
+                    <select name="car_model" id="car_model">
+                        <option value="">Select Company First</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="year">Purchase Year</label>
+                    <select name="year" id="year">
+                        {% for year in years %}
+                            <option value="{{ year }}">{{ year }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="fuel_type">Fuel Category</label>
+                    <select name="fuel_type" id="fuel_type">
+                        {% for fuel in fuel_types %}
+                            <option value="{{ fuel }}">{{ fuel }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="kms_driven">Distance Traveled (Kilometers)</label>
+                    <input type="number" name="kms_driven" id="kms_driven" placeholder="e.g., 25000" required min="0">
+                </div>
+
+                <div class="form-group full-width">
+                    <button type="submit" class="btn-predict" id="predict-btn">Generate Estimate</button>
+                </div>
+            </div>
+        </form>
+
+        <div class="result-section" id="prediction-result">
+            <div class="result-label">Estimated Market Value</div>
+            <div class="result-value" id="price-val">₹ 0.00</div>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2026 Vehicle Valuator Service &bull; Advanced Prediction Logic
+    </footer>
+
+    <script>
+        function load_car_models(company_id, car_model_id) {
+            var company = document.getElementById(company_id);
+            var car_model = document.getElementById(car_model_id);
+            console.log(company.value);
+
+            car_model.innerHTML = "<option value=''>Loading...</option>";
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/get_models', true);
+            xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+
+            xhr.onreadystatechange = function() {
+                if(xhr.readyState == 4 && xhr.status == 200) {
+                    car_model.innerHTML = xhr.responseText;
+                }
+            };
+
+            xhr.send("company=" + encodeURIComponent(company.value));
+        }
+
+        document.getElementById('prediction-form').onsubmit = function(e) {
+            e.preventDefault();
+            
+            var btn = document.getElementById('predict-btn');
+            var resultContainer = document.getElementById('prediction-result');
+            var priceVal = document.getElementById('price-val');
+
+            btn.disabled = true;
+            btn.innerText = "Analyzing Market Data...";
+
+            var fd = new FormData(this);
+            var xhr = new XMLHttpRequest();
+
+            xhr.open('POST', '/predict', true);
+            
+            xhr.onreadystatechange = function() {
+                if(xhr.readyState == XMLHttpRequest.DONE) {
+                    btn.disabled = false;
+                    btn.innerText = "Predict Price";
+                    
+                    if(xhr.status == 200) {
+                        priceVal.innerText = "₹ " + parseFloat(xhr.responseText).toLocaleString('en-IN');
+                        resultContainer.classList.add('active');
+                    } else {
+                        priceVal.innerText = "Error in prediction";
+                        resultContainer.classList.add('active');
+                    }
+                }
+            };
+
+            xhr.send(fd);
+        };
+    </script>
+</body>
+</html>
